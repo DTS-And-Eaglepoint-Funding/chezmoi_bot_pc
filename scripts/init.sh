@@ -108,16 +108,16 @@ install_additional_packages() {
     log "Installing additional packages..."
     x86_64_packages=(git-credential-manager git-credential-manager-extras google-chrome chromedriver anydesk-bin carapace-bin tailscale python-pipx atuin xmousepasteblock rustdesk-bin)
     aarch64_packages=(git-credential-github xclip)
-    common_packages=(teamviewer fwupd geckodriver yaycache-hook paccache-hook jq xsel sxhkd openssh)
+    common_packages=(teamviewer fwupd geckodriver yaycache-hook paccache-hook jq xsel sxhkd openssh input-leap)
     case "$ARCH" in
         "x86_64")
-            sudo_cmd yay -S "${x86_64_packages[@]}"
+            yay -S "${x86_64_packages[@]}"
             ;;
         "aarch64")
-            sudo_cmd yay -S "${aarch64_packages[@]}"
+            yay -S "${aarch64_packages[@]}"
             ;;
     esac
-    sudo_cmd yay -S "${common_packages[@]}"
+    yay -S "${common_packages[@]}"
 
     if [[ "$ARCH" == "aarch64" ]]; then
         sudo_cmd arm-pacman install tailscale
