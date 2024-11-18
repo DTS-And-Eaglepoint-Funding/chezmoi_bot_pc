@@ -108,7 +108,7 @@ install_additional_packages() {
     log "Installing additional packages..."
     x86_64_packages="git-credential-manager git-credential-manager-extras google-chrome chromedriver anydesk-bin carapace-bin tailscale python-pipx atuin xmousepasteblock rustdesk-bin"
     aarch64_packages="git-credential-github xclip"
-    common_packages="teamviewer fwupd geckodriver yaycache-hook paccache-hook jq xsel sxhkd openssh input-leap"
+    common_packages="teamviewer fwupd geckodriver yaycache-hook paccache-hook jq xsel sxhkd openssh input-leap fzf"
     case "$ARCH" in
         "x86_64")
             yay -S --needed --noconfirm $x86_64_packages
