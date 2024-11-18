@@ -16,7 +16,6 @@ failure() {
 }
 trap 'failure "${BASH_LINENO[*]}" "$LINENO" "${FUNCNAME[*]:-script}" "$?" "$BASH_COMMAND"' ERR
 
-CONFIGURE_PATH="/etc"
 ARCH=$(uname -m)
 
 sudo_cmd() {
@@ -74,8 +73,8 @@ log() {
 
 configure_pacman() {
     log "Configuring pacman..."
-    sudo_cmd sed -Ei '/Color/s/^#//' "$CONFIGURE_PATH/pacman.conf"
-    sed -i '/^Color$/a ILoveCandy' "$CONFIGURE_PATH/pacman.conf"
+    sudo_cmd sed -Ei '/Color/s/^#//' "/etc/pacman.conf"
+    sed -i '/^Color$/a ILoveCandy' "/etc/pacman.conf"
 }
 
 update_package_lists() {
@@ -85,7 +84,7 @@ update_package_lists() {
 
 configure_pamac() {
     log "Configuring PAMAC..."
-    sudo_cmd sed -Ei '/EnableAUR/s/^#//' "$CONFIGURE_PATH/pamac.conf"
+    sudo_cmd sed -Ei '/EnableAUR/s/^#//' "/etc/pamac.conf"
 }
 
 arm_swich_to_testing(){
