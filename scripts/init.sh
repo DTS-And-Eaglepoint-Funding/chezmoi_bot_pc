@@ -98,7 +98,7 @@ arm_swich_to_testing(){
 
 install_dev_tools() {
     log "Installing development tools..."
-    if ! sudo_cmd pacman -Sy yay base-devel patch tk cmake; then
+    if ! sudo_cmd pacman -Sy --needed --noconfirm  yay base-devel patch tk cmake; then
         log "Failed to install development tools"
         exit 1
     fi
@@ -111,13 +111,13 @@ install_additional_packages() {
     common_packages="teamviewer fwupd geckodriver yaycache-hook paccache-hook jq xsel sxhkd openssh input-leap"
     case "$ARCH" in
         "x86_64")
-            yay -S $x86_64_packages
+            yay -S --needed --noconfirm $x86_64_packages
             ;;
         "aarch64")
-            yay -S $aarch64_packages
+            yay -S --needed --noconfirm $aarch64_packages
             ;;
     esac
-    yay -S $common_packages
+    yay -S --needed --noconfirm $common_packages
 
     if [[ "$ARCH" == "aarch64" ]]; then
         sudo_cmd "$HOME/.local/share/chezmoi/home/dot_local/bin/executable_arm-pacman" install tailscale
