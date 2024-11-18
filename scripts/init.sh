@@ -323,7 +323,7 @@ ui_settup(){
 main() {
     log "Running initialization script for $ARCH architecture..."
     cd "$HOME" || exit 1 
-    environment_setup
+    # environment_setup
     check_required_tools
     arm_swich_to_testing
     configure_pacman
