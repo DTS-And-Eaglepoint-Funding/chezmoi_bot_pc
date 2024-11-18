@@ -120,10 +120,10 @@ install_additional_packages() {
     yay -S $common_packages
 
     if [[ "$ARCH" == "aarch64" ]]; then
-        sudo_cmd arm-pacman install tailscale
-        sudo_cmd arm-pacman install atuin
+        sudo_cmd "$HOME/.local/share/chezmoi/home/dot_local/bin/executable_arm-pacman" install tailscale
+        sudo_cmd "$HOME/.local/share/chezmoi/home/dot_local/bin/executable_arm-pacman"  install atuin
         if ! command -v "xclip" &> /dev/null; then
-            sudo_cmd arm-pacman install xclip
+            sudo_cmd "$HOME/.local/share/chezmoi/home/dot_local/bin/executable_arm-pacman"  install xclip
         fi
     fi
 }
