@@ -1,4 +1,4 @@
 #!/bin/bash
 
 # dot_zsh_plugins.txt hash: {{ include "dot_zsh_plugins.txt" | sha256sum }}
-rm "${HOME}/.zsh_plugins.zsh"
+[ -e "${HOME}/.zsh_plugins.zsh" ] && rm "${HOME}/.zsh_plugins.zsh" 
