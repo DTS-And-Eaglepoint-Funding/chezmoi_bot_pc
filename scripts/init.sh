@@ -74,7 +74,7 @@ log() {
 configure_pacman() {
     log "Configuring pacman..."
     sudo_cmd sed -Ei '/Color/s/^#//' "/etc/pacman.conf"
-    sed -i '/^Color$/a ILoveCandy' "/etc/pacman.conf"
+    sudo_cmd sed -i '/^Color$/a ILoveCandy' "/etc/pacman.conf"
 }
 
 update_package_lists() {
