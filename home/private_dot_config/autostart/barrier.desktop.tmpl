@@ -1,0 +1,15 @@
+[Desktop Entry]
+Categories=Utility;RemoteAccess;
+Comment=Keyboard and mouse sharing solution
+{{ if lookPath "input-leap" }}
+Name=Input Leap
+Exec=input-leap
+Icon=io.github.input_leap.InputLeap
+{{ else if lookPath "barrier" }}
+Name=Barrier
+Exec=barrier
+Icon=barrier
+{{ end }}
+Keywords=keyboard;mouse;sharing;network;share;
+Terminal=false
+Type=Application

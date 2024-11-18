@@ -1,0 +1,35 @@
+[user]
+    name = "{{ .chezmoi.username }}"
+    email = "{{ .chezmoi.username }}@{{ .chezmoi.hostname }}.local"
+
+[core]
+    editor = "nano"
+    excludesFile = "~/.gitignore"
+
+{{- if eq .chezmoi.arch "amd64"}}
+[credential]
+	helper = store
+	credentialStore = secretservice
+	helper = /usr/bin/git-credential-manager-core
+
+[credential "https://dev.azure.com"]
+	useHttpPath = true
+
+{{ else if eq .chezmoi.arch "arm64" -}}
+[credential]
+	useHttpPath = true
+
+[credential "https://github.com/Deep-Tech-Showcase-Eaglepoint-Funding"]
+	username=DTS-And-Eaglepoint-Funding
+	helper = store
+	helper = "github -p --no-open-url"
+
+[credential "https://github.com/DTS-And-Eaglepoint-Funding"]
+	username=DTS-And-Eaglepoint-Funding
+	helper = store
+	helper = "github -p --no-open-url"
+
+{{ end -}}
+
+[http]
+	sslVerify = false

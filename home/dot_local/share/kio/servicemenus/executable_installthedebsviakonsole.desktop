@@ -1,0 +1,40 @@
+[Desktop Entry]
+Actions=installthedeb;
+Icon=application-vnd.debian.binary-package
+MimeType=application/vnd.debian.binary-package;
+ServiceTypes=KonqPopupMenu/Plugin
+Type=Service
+X-KDE-Priority=TopLevel
+X-KDE-StartupNotify=false
+
+
+[Desktop Action installthedeb]
+# Exec=files=$(echo '%N' | sed -e 's@^@\../@g' -e 's@ @ \../@g');konsole --hold -e bash -c "echo Install %N?;sudo apt install -y $files"
+Exec=files=$(echo '%U' | sed "s@$PWD/@\../@g");if [ `which apt` ]; then konsole --hold -e bash -c "echo Install %N ?;sudo apt install -y $files"; elif [ `which dpkg` ]; then konsole --hold -e bash -c "echo Install %N ?;sudo dpkg -i $files"; else kdialog --msgbox "Debian package format is not supported"; fi;#
+#Exec=konsole --noclose -e sudo dpkg -i %n
+Icon=application-vnd.debian.binary-package
+Name[en]=Install deb packages
+Name[zh_cn]=安装deb包
+Name[de]=Deb-Pakete installieren
+Name[fr]=Installer les paquets deb
+Name[es]=Instalar paquetes deb
+Name[cs]=Instalace balíčků deb
+Name[el]=Εγκατάσταση πακέτων deb
+Name[pl]=Zainstaluj pakiety deb
+Name[uk]=Встановити deb-пакети
+Name[ro]=Instalarea pachetelor deb
+Name[id]=Instal paket deb
+Name[ja]=debパッケージのインストール
+Name[ko]=디버그 패키지 설치
+Name[hu]=A deb csomagok telepítése
+Name[it]=Installare i pacchetti deb
+Name[nl]=Deb-pakketten installeren
+Name[pt]=Instalar pacotes deb
+Name[sv]=Installera deb-paket
+Name[fi]=Asenna deb-paketit
+Name[lv]=Instalēt deb paketes
+Name[lt]=Įdiegti deb paketus
+Name[tr]=Deb paketlerini yükleme
+Name[sk]=Inštalácia deb balíkov
+Name[sl]=Namestitev paketov deb
+Name[et]=Paigaldage deb-paketid

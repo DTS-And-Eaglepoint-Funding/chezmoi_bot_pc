@@ -1,0 +1,22 @@
+[Unit]
+Description=Open-source KVM software (client)
+After=network.target tailscaled.service
+Requires=localbarrier@am1m.service
+
+[Service]
+Type=simple
+{{ if lookPath "input-leapc" }}
+ExecStart={{ lookPath "input-leapc" }} --enable-crypto --no-restart --no-daemon %i
+{{ else if lookPath "barrierc" }}
+ExecStart={{ lookPath "barrierc" }} --enable-crypto --no-restart --no-daemon %i
+{{ end }}
+ProtectHome=true
+ProtectSystem=strict
+PrivateTmp=true
+Restart=always
+RestartSec=2
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Install]
+WantedBy=default.target

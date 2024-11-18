@@ -1,0 +1,22 @@
+[Unit]
+Description=Open-source KVM software (Server)
+After=network.target tailscaled.service
+
+[Service]
+Environment=DISPLAY=:0
+{{ if lookPath "input-leaps" }}
+ExecStart={{ lookPath "input-leaps" }} --address %i --enable-crypto --no-restart --no-daemon --config %h/.config/InputLeap/InputLeap.config
+{{ else if lookPath "barriers" }}
+ExecStart={{ lookPath "barriers" }} --address %i --enable-crypto --no-restart --no-daemon --config %h/.local/barrier/barrier.config
+{{ end }}
+Type=simple
+ProtectHome=read-only
+ProtectSystem=strict
+PrivateTmp=true
+Restart=always
+RestartSec=10
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Install]
+WantedBy=alc.target

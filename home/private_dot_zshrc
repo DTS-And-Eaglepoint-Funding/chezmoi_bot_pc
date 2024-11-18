@@ -1,0 +1,45 @@
+# vim: filetype=zsh
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+export EDITOR='nano'
+export PATH=$HOME/bin:/usr/local/bin:$PATH
+
+# Clone antidote if necessary.
+[[ -d ${ZDOTDIR:-$HOME}/.antidote ]] ||
+  git clone https://github.com/mattmc3/antidote ${ZDOTDIR:-$HOME}/.antidote
+
+zstyle ':antidote:bundle' use-friendly-names on
+zstyle ':completion:*' menu select
+zstyle ':hist:*' expand-aliases no
+
+# Set the root name of the plugins files (.txt and .zsh) antidote will use.
+zsh_plugins=${ZDOTDIR:-~}/.zsh_plugins
+
+# Ensure the .zsh_plugins.txt file exists so you can add plugins.
+[[ -f ${zsh_plugins}.txt ]] || touch "${zsh_plugins}.txt"
+
+# Lazy-load antidote from its functions directory.
+fpath=("${ZDOTDIR:-~}/.antidote/functions" $fpath)
+autoload -Uz antidote
+
+# Generate a new static file whenever .zsh_plugins.txt is updated.
+if [[ ! ${zsh_plugins}.zsh -nt ${zsh_plugins}.txt ]]; then
+  antidote bundle <${zsh_plugins}.txt >|${zsh_plugins}.zsh
+fi
+
+# Source your static plugins file.
+source "${zsh_plugins}.zsh"
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# Source aliases you like.
+[[ -e "${ZDOTDIR:-$HOME}/.aliases" ]] && source "${ZDOTDIR:-$HOME}/.aliases"
+
+if ! command -v carapace >/dev/null 2>&1
+then
+    export CARAPACE_BRIDGES='zsh,fish,bash,inshellisense,argcomplete,' # optional
+    zstyle ':completion:*' format $'\e[2;37mCompleting %d\e[m'
+    zstyle ':completion:*:git:*' group-order 'main commands' 'alias commands' 'external commands'
+    source $(carapace _carapace)
+fi

@@ -1,0 +1,29 @@
+#compdef getnf
+
+_getnf() {
+  local state font_list
+
+  # Example list of available fonts (replace or dynamically generate this list if needed)
+  font_list=('Hack Nerd Font' 'Fira Code Nerd Font' 'DejaVu Sans Mono Nerd Font')
+
+  _arguments -C \
+    '-h[display this help message]' \
+    '-k[keep the downloaded font archives]' \
+    '-a[show already installed Nerd Fonts in the menu]' \
+    '-g[install/uninstall/list/update Nerd Fonts for all users]' \
+    '-l[show the list of installed Nerd Fonts]' \
+    '-L[show the list of all Nerd Fonts]' \
+    '-f[select and install Nerd Fonts using fzf]' \
+    '-i[directly install the specified Nerd Fonts]:font name:->fonts' \
+    '-u[uninstall the specified Nerd Fonts]:font name:->fonts' \
+    '-U[update all installed Nerd Fonts]' \
+    '-V[display current getnf version]'
+
+  case $state in
+    fonts)
+      _describe 'available fonts' font_list
+      ;;
+  esac
+}
+
+_getnf "$@"

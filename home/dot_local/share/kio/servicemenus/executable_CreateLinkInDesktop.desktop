@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=KonqPopupMenu/Plugin
+MimeType=inode/directory;application/octet-stream;
+Actions=CreateLinkinDesktop;
+X-KDE-Priority=TopLevel
+X-KDE-StartupNotify=false
+X-KDE-RequiredNumberOfUrls=1
+Icon=image
+
+
+[Desktop Action CreateLinkinDesktop]
+Icon=emblem-symbolic-link
+Name=Create Link in Desktop
+Exec=pathDesktop=$(xdg-user-dir DESKTOP); filepath=%u; dot=''; name=''; ext=''; suffix=''; if [ -d "$filepath" ]; then name=%n; else ff=%n; dot="."; name=$(echo "$ff" | awk -F. '{OFS="."; NF--; print $0}'); ext=$(echo "$ff" | awk -F. '{print $NF}'); fi; if [[ -e "$pathDesktop/$name$dot$ext" || -L "$pathDesktop/$name$dot$ext" ]] ; then i=1; suffix=$i; while [[ -e "$pathDesktop/$name($i)$dot$ext" || -L "$pathDesktop/$name($i)$dot$ext" ]] ; do let i++; suffix=$i; done; ln -s %f "$pathDesktop/$name($suffix)$dot$ext"; else ln -s %f "$pathDesktop"; fi

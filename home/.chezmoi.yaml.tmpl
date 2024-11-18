@@ -1,0 +1,15 @@
+progress: true
+color: true
+git:
+  autoCommit: true
+  autoPush: true
+edit:
+  command: nano
+  apply: true
+  watch: true
+gitHub:
+  refreshPeriod: 24h
+hooks:
+  init:
+    post:
+      command: .local/share/chezmoi/scripts/init.sh

@@ -1,0 +1,627 @@
+#!/bin/bash
+
+TEST_MODE=false
+package_names=()
+
+
+# @getoptions
+parser_definition() {
+    # Display help message for the script
+    setup REST -- "Usage: $0 [options] <subcommand> [package_names...]"
+    
+    msg -- 'Options:'
+    flag  TEST_MODE       -t --test --dry-run      on:true  init:'TEST_MODE=false' -- "Test mode: simulate installation"
+    flag  help_flag       -h --help                on:true init:'help_flag=false' -- "Show this help message"
+    flag  update_flag     -y --update-db           on:true init:'update_flag=false' -- "Update the package database"
+    flag  install_flag    -S -i --install --sync   on:true init:'install_flag=false' -- "Install one or more packages"
+    flag  query_flag      -Q --info --list         on:true init:'query_flag=false' -- "Query for package information"
+    flag  remove_flag     -R --remove              on:true init:'remove_flag=false' -- "Remove one or more packages"
+    flag  completion_flag -c --completion          on:true init:'completion_flag=false' -- "Autocompletion for package names"
+
+    msg -- 'Subcommands:'
+    cmd  install          -- "Install packages"
+    cmd  remove           -- "Remove packages"
+    cmd  query            -- "Query packages"
+    cmd  update           -- "Update package database"
+    cmd  completion       -- "Generate completion script"
+	
+}
+# @end
+
+
+help_flag=false
+update_flag=false
+install_flag=false
+query_flag=false
+remove_flag=false
+completion_flag=false
+REST=''
+parse() {
+  OPTIND=$(($#+1))
+  while OPTARG= && [ "${REST}" != x ] && [ $# -gt 0 ]; do
+    case $1 in
+      --?*=*) OPTARG=$1; shift
+        eval 'set -- "${OPTARG%%\=*}" "${OPTARG#*\=}"' ${1+'"$@"'}
+        ;;
+      --no-*|--without-*) unset OPTARG ;;
+      -[thuSiQRc]?*) OPTARG=$1; shift
+        eval 'set -- "${OPTARG%"${OPTARG#??}"}" -"${OPTARG#??}"' ${1+'"$@"'}
+        case $2 in --*) set -- "$1" unknown "$2" && REST=x; esac;OPTARG= ;;
+    esac
+    case $1 in
+      '-t'|'--test'|'--dry-run')
+        [ "${OPTARG:-}" ] && OPTARG=${OPTARG#*\=} && set "noarg" "$1" && break
+        eval '[ ${OPTARG+x} ] &&:' && OPTARG='true' || OPTARG=''
+        TEST_MODE="$OPTARG"
+        ;;
+      '-h'|'--help')
+        [ "${OPTARG:-}" ] && OPTARG=${OPTARG#*\=} && set "noarg" "$1" && break
+        eval '[ ${OPTARG+x} ] &&:' && OPTARG='true' || OPTARG=''
+        help_flag="$OPTARG"
+        ;;
+      '-y'|'--update-db'|'update')
+        [ "${OPTARG:-}" ] && OPTARG=${OPTARG#*\=} && set "noarg" "$1" && break
+        eval '[ ${OPTARG+x} ] &&:' && OPTARG='true' || OPTARG=''
+        update_flag="$OPTARG"
+        ;;
+      '-S'|'-i'|'--install'|'--sync'|'install')
+        [ "${OPTARG:-}" ] && OPTARG=${OPTARG#*\=} && set "noarg" "$1" && break
+        eval '[ ${OPTARG+x} ] &&:' && OPTARG='true' || OPTARG=''
+        install_flag="$OPTARG"
+        ;;  
+      '-Sy'|'-iy'|'-yS'|'-yi')
+        [ "${OPTARG:-}" ] && OPTARG=${OPTARG#*\=} && set "noarg" "$1" && break
+        eval '[ ${OPTARG+x} ] &&:' && OPTARG='true' || OPTARG=''
+        install_flag="$OPTARG"
+        update_flag="$OPTARG"
+        ;;   
+      '-Qy'|'-yQ')
+        [ "${OPTARG:-}" ] && OPTARG=${OPTARG#*\=} && set "noarg" "$1" && break
+        eval '[ ${OPTARG+x} ] &&:' && OPTARG='true' || OPTARG=''
+        query_flag="$OPTARG"
+        update_flag="$OPTARG"
+        ;; 
+      '-Syt'|'-iyt'|'-ySt'|'-yit'|'-Sty'|'-ity'|'-ytS'|'-yti'|'-tyS'|'-tyi'|'-tSy'|'-tiy')
+        [ "${OPTARG:-}" ] && OPTARG=${OPTARG#*\=} && set "noarg" "$1" && break
+        eval '[ ${OPTARG+x} ] &&:' && OPTARG='true' || OPTARG=''
+        install_flag="$OPTARG"
+        update_flag="$OPTARG"
+        TEST_MODE="$OPTARG"
+        ;;
+      '-St'|'-it'|'-tS'|'-ti')
+        [ "${OPTARG:-}" ] && OPTARG=${OPTARG#*\=} && set "noarg" "$1" && break
+        eval '[ ${OPTARG+x} ] &&:' && OPTARG='true' || OPTARG=''
+        install_flag="$OPTARG"
+        TEST_MODE="$OPTARG"
+        ;;
+      '-ut'|'-tu')
+        [ "${OPTARG:-}" ] && OPTARG=${OPTARG#*\=} && set "noarg" "$1" && break
+        eval '[ ${OPTARG+x} ] &&:' && OPTARG='true' || OPTARG=''
+        update_flag="$OPTARG"
+        TEST_MODE="$OPTARG"
+        ;;
+      '-Q'|'--info'|'--list'|'query')
+        [ "${OPTARG:-}" ] && OPTARG=${OPTARG#*\=} && set "noarg" "$1" && break
+        eval '[ ${OPTARG+x} ] &&:' && OPTARG='true' || OPTARG=''
+        query_flag="$OPTARG"
+        ;;
+      '-R'|'--remove'|'remove')
+        [ "${OPTARG:-}" ] && OPTARG=${OPTARG#*\=} && set "noarg" "$1" && break
+        eval '[ ${OPTARG+x} ] &&:' && OPTARG='true' || OPTARG=''
+        remove_flag="$OPTARG"
+        ;;
+      '-c'|'--completion'|'completion')
+        [ "${OPTARG:-}" ] && OPTARG=${OPTARG#*\=} && set "noarg" "$1" && break
+        eval '[ ${OPTARG+x} ] &&:' && OPTARG='true' || OPTARG=''
+        completion_flag="$OPTARG"
+        ;;
+      --)
+        while [ $# -gt 0 ]; do
+          REST="${REST} \"\${$(($OPTIND-$#))}\""
+          shift
+        done
+        break ;;
+      [-]?*) set "unknown" "$1"; break ;;
+      *) package_names+=("$1") ;;
+    esac
+    shift
+  done
+  [ $# -eq 0 ] && { OPTIND=1; unset OPTARG; return 0; }
+  case $1 in
+    unknown) set "Unrecognized option: $2" "$@" ;;
+    noarg) set "Does not allow an argument: $2" "$@" ;;
+    required) set "Requires an argument: $2" "$@" ;;
+    pattern:*) set "Does not match the pattern (${1#*:}): $2" "$@" ;;
+    notcmd) set "Not a command: $2" "$@" ;;
+    *) set "Validation error ($1): $2" "$@"
+  esac
+  echo "$1" >&2
+  exit 1
+}
+
+parse "$@"
+
+# Default architecture for test purposes
+ARCHITECTURE="armv7h"
+
+# Output file
+OUTPUT_FILE="archlinuxarm_db.csv"
+
+MIRROR_URL="http://mirror.archlinuxarm.org/"
+
+MAX_DATABASE_AGE=10  # You can change this value as needed
+
+show_help() {
+    echo "Usage: $0 [options]"
+    echo ""
+    echo "Options:"
+    echo "  -y, --update-db        Update the package database"
+    echo "  -S, --install          Install one or more packages"
+    echo "  -q, --query            Query for package information"
+    echo "  -R, --remove           Remove one or more packages"
+    echo "  -t, --test             Test mode: simulate installation"
+    echo "  -h, --help             Show this help message"
+    echo "  -c, --completion       Autocompletion for package names"
+    echo ""
+    echo "Note: In test mode, packages will not be installed."
+}
+
+# Function to check if the database exists
+check_database() {
+    if [ ! -f "$OUTPUT_FILE" ]; then
+        echo "Database file '$OUTPUT_FILE' not found."
+        return 1  # Return 1 if the database does not exist
+    fi
+    return 0  # Return 0 if the database exists
+}
+
+# Function to check the age of the database file
+check_database_age() {
+    local file_age
+    file_age=$(find "$OUTPUT_FILE" -mtime +$MAX_DATABASE_AGE -print)
+    if [ -n "$file_age" ]; then
+        echo "Database file '$OUTPUT_FILE' is older than $MAX_DATABASE_AGE days."
+        return 1  # Return 1 if the file is older than the threshold
+    fi
+    return 0  # Return 0 if the file is within the age limit
+}
+
+set_arch_and_url(){
+    # Detect architecture and set ARCHITECTURE variable if not in test mode
+    if [[ "$TEST_MODE" == "false" ]]; then
+        case "$(uname -m)" in
+            aarch64)
+                ARCHITECTURE="aarch64"
+                ;;
+            armv7h|armv7l)
+                ARCHITECTURE="armv7h"
+                ;;
+            *)
+                echo "Unsupported architecture: $(uname -m)"
+                exit 1
+                ;;
+        esac
+    fi
+
+    # Get the final mirror URL based on the architecture
+    if [[ "$TEST_MODE" == "false" ]]; then
+        MIRROR_URL="$(curl -fsL -o /dev/null -w "%{url_effective}" "http://mirror.archlinuxarm.org/$ARCHITECTURE")"
+        
+        # Check if curl command was successful
+        if [[ $? -ne 0 ]]; then
+            echo "Error: Failed to retrieve the mirror URL for architecture $ARCHITECTURE."
+            exit 1
+        fi
+    else
+        # If in test mode, set a placeholder or a known good URL
+        MIRROR_URL="$(curl -Ls -o /dev/null -w "%{url_effective}" http://mirror.archlinuxarm.org)$ARCHITECTURE"
+    fi
+}
+
+update_database() {
+    set_arch_and_url
+    if [[ "$TEST_MODE" == "true" ]]; then
+        echo "TEST MODE: Using $ARCHITECTURE as the database Architecture"
+    fi
+    # Create or truncate the output file
+    echo "Name,URL" > "$OUTPUT_FILE"
+
+    repos=("alarm" "aur" "community" "core" "extra")
+
+    for repo in "${repos[@]}"; do
+        echo "Processing: $repo repository..."
+        repo_url="$MIRROR_URL/$repo/"
+                
+        # Use -f to fail silently on server errors if not in test mode
+        if [[ "$TEST_MODE" == "false" ]]; then
+            curl_response=$(curl -s -f -L "$repo_url") # Include -f when not in test mode
+        else
+            curl_response=$(curl -s -L "$repo_url") # Just -s and -L in test mode
+        fi
+
+        if [ $? -ne 0 ]; then
+            echo "Error fetching repository: $repo_url"
+            continue
+        fi
+
+        # Fetch and process repository contents
+        response=$(echo "$curl_response" | grep -oP '(?<=href=")[^"]*' | grep -E '\.pkg\.tar\.(xz|zst)$')
+        if [ -z "$response" ]; then
+            echo "No packages found in the $repo repository."
+            continue
+        fi
+
+        while IFS= read -r package; do
+            # Extract the package name before the version numbers
+            package_name=$(echo "$package" | awk -F'-[0-9]+' '{print $1}')
+            
+            # Append the package name and URL to the CSV file
+            echo "$package_name;$repo/$package" >> "$OUTPUT_FILE"
+        done <<< "$response"
+    done
+    echo "Database updated successfully."
+}
+
+query_database() {
+    local query=$1
+    # Check if the database file exists, if not, update automatically
+    if ! check_database || ! check_database_age; then
+        echo "Updating database..."
+        update_database
+    fi
+    grep -i "$query" "$OUTPUT_FILE" | cut -d ';' -f 1
+}
+
+install_package() {
+    local package_names=("$@") # Accept an array of package names
+
+    set_arch_and_url
+
+    # Check if the database file exists, if not, update automatically
+    if ! check_database || ! check_database_age; then
+        echo "Updating database..."
+        update_database
+    fi
+
+    for package_name in "${package_names[@]}"; do
+        # Find the URL from the database file
+        package_info=$(grep -i -w "$package_name" "$OUTPUT_FILE")
+        echo "Downloading $package_name"
+        # Count the number of matches
+        match_count=$(echo "$package_info" | grep -c '[^[:space:]]')
+
+        if [ "$match_count" -eq 0 ]; then
+            echo "Package '$package_name' not found in the database."
+            continue # Skip to the next package
+        elif [ "$match_count" -gt 1 ]; then
+            echo "Multiple packages found for '$package_name'. Please be more specific."
+            continue # Skip to the next package
+        fi
+        
+        # Extract the package URL
+        package_url="$MIRROR_URL/$(echo "$package_info" | cut -d ';' -f 2)"
+
+        if [[ "$TEST_MODE" == "true" ]]; then
+            # Test mode: use curl to download the package instead of installing
+            echo "TEST MODE: Downloading $package_name from $package_url..."
+            curl -O "$package_url" || { echo "Failed to download $package_name"; continue; }
+        else
+            # Install the package using pacman
+            echo "Installing $package_name from $package_url..."
+            if sudo pacman -U "$package_url"; then
+                echo "$package_name installed successfully."
+            else
+                echo "Failed to install $package_name."
+            fi
+        fi
+    done
+}
+
+remove_package() {
+    local package_names=("$@") # Accept an array of package names
+
+    for package_name in "${package_names[@]}"; do
+        # Check if the package is installed
+        if ! pacman -Qi "$package_name" &> /dev/null; then
+            echo "Package '$package_name' is not installed."
+            continue
+        fi
+
+        echo "Removing $package_name..."
+        if sudo pacman -R "$package_name"; then
+            echo "$package_name removed successfully."
+        else
+            echo "Failed to remove $package_name."
+        fi
+    done
+}
+
+completion() {
+    local shell_type="$1"
+    
+    # Auto-detect shell type if not provided
+    if [[ -z "$shell_type" ]]; then
+        if [[ "$BASH_VERSION" ]]; then
+            shell_type="bash"
+        elif [[ "$ZSH_VERSION" ]]; then
+            shell_type="zsh"
+        elif command -v fish &> /dev/null; then
+            shell_type="fish"
+        else
+            echo "Unsupported shell type: Unable to detect shell."
+            return 1
+        fi
+    fi
+
+    file_path="$(dirname "$(realpath "$0")")/$OUTPUT_FILE"
+
+    if [[ $TEST_MODE == "true" ]]; then
+        echo "Shell Type is $shell_type"
+        echo "File Path is $file_path"
+    fi
+
+    case "$shell_type" in
+        bash)
+            cat << EOF
+_arm_pacman_completion() {
+    local cur opts descriptions subcommands subcommand_descriptions
+    cur="\${1}"  # Current word being completed
+    file_path="$file_path"
+
+    # Define options and their descriptions
+    opts=(
+        -t --test --dry-run
+        -h --help
+        -y --update-db
+        -S -i --install --sync
+        -Q --info --list
+        -R --remove
+        -c --completion
+    )
+
+    # Define subcommands and their descriptions
+    subcommands=(
+        install
+        remove
+        query
+        update
+        completion
+    )
+
+    # Get available package names from the database
+    if [ -f "$file_path" ]; then
+        opts+=(\$(cut -d ';' -f 1 "$file_path" | grep -i "^\$cur"))
+    fi
+
+    # Completion for options
+    COMPREPLY=(\$(compgen -W "\${opts[*]}" -- "\$cur"))
+
+    # Completion for subcommands
+    if [[ "\$cur" == -* ]]; then
+        return 0
+    else
+        COMPREPLY+=(\$(compgen -W "\${subcommands[*]}" -- "\$cur"))
+    fi
+
+    # Display help information when '--help' is typed
+    if [[ "\$cur" == "--help" ]]; then
+        echo "Available options:"
+        for i in "\${!opts[@]}"; do
+            echo "\${opts[i]}: \${descriptions[i]}"
+        done
+        echo "Subcommands:"
+        for i in "\${!subcommands[@]}"; do
+            echo "\${subcommands[i]}: \${subcommand_descriptions[i]}"
+        done
+        return 0
+    fi
+}
+complete -F _arm_pacman_completion arm-pacman
+EOF
+            ;;
+        zsh)
+            cat << EOF
+_arm_pacman_completion() {
+    local -a opts descriptions subcommands subcommand_descriptions
+    local cur
+    cur="\${1}"  # Use the correct syntax for the current word
+    file_path="$file_path"
+
+    # Define options and their descriptions
+    opts=(
+        -t --test --dry-run
+        -h --help
+        -y --update-db
+        -S -i --install --sync
+        -Q --info --list
+        -R --remove
+        -c --completion
+    )
+
+    descriptions=(
+        '--test: Test mode: simulate installation'
+        '--help: Show this help message'
+        '--update-db: Update the package database'
+        '--install: Install one or more packages'
+        '--info: Query for package information'
+        '--remove: Remove one or more packages'
+        '--completion: Autocompletion for package names'
+    )
+
+    # Define subcommands and their descriptions
+    subcommands=(
+        install
+        remove
+        query
+        update
+        completion
+    )
+
+    subcommand_descriptions=(
+        'Install packages'
+        'Remove packages'
+        'Query packages'
+        'Update package database'
+        'Generate completion script'
+    )
+
+    # Get available package names from the database
+    if [ -f "$file_path" ]; then
+        opts+=(\$(cut -d ';' -f 1 "$file_path" | grep -i "^\$cur"))
+    fi
+
+    # Completion options for flags
+    _describe 'options' opts -- \${descriptions[@]}
+
+    # Completion for subcommands
+    _describe 'subcommands' subcommands -- \${subcommand_descriptions[@]}
+
+    # Show help information when '--help' is typed
+    if [[ "\$cur" == "--help" ]]; then
+        echo "Available options:"
+        for i in "\${!opts[@]}"; do
+            echo "\${opts[i]}: \${descriptions[i]}"
+        done
+        echo "Subcommands:"
+        for i in "\${!subcommands[@]}"; do
+            echo "\${subcommands[i]}: \${subcommand_descriptions[i]}"
+        done
+    fi
+}
+compdef _arm_pacman_completion arm-pacman
+EOF
+            ;;
+        fish)
+            cat << EOF
+# Place this in your ~/.config/fish/completions/arm-pacman.fish
+function __fish_arm_pacman_complete
+    set -l cur (commandline -ct)
+    set -l opts --test --dry-run --help --update-db --install --sync --info --list --remove --completion
+    set -l subcommands install remove query update completion
+
+    # Check for package names in the database
+    set -l file_path "$file_path"
+    if test -f "$file_path"
+        for pkg in (cut -d ';' -f 1 "$file_path")
+            if string match -q "\$cur*" -- \$pkg
+                set -a opts \$pkg
+            end
+        end
+    end
+
+    # Display completions
+    switch (string length -- \$cur)
+        case 0
+            # No current input
+            complete -c arm-pacman -a "\$opts" -s "flag"
+            complete -c arm-pacman -a "\$subcommands" -s "subcommand"
+        case '*'
+            complete -c arm-pacman -a "\$opts" -s "flag"
+            complete -c arm-pacman -a "\$subcommands" -s "subcommand"
+    end
+
+    # Show help information if --help is typed
+    if test "\$cur" = "--help"
+        echo "Available options:"
+        echo "--test: Test mode: simulate installation"
+        echo "--help: Show this help message"
+        echo "--update-db: Update the package database"
+        echo "--install: Install one or more packages"
+        echo "--info: Query for package information"
+        echo "--remove: Remove one or more packages"
+        echo "--completion: Autocompletion for package names"
+        echo "Subcommands:"
+        echo "install: Install packages"
+        echo "remove: Remove packages"
+        echo "query: Query packages"
+        echo "update: Update package database"
+        echo "completion: Generate completion script"
+    end
+end
+
+complete -f -n "__fish_seen_subcommand_from install remove query update completion" -a "(\$opts)" arm-pacman
+
+EOF
+            ;;
+        *)
+            echo "Unsupported shell type: $shell_type"
+            return 1
+            ;;
+    esac
+}
+
+
+if [[ $TEST_MODE == "true" ]]; then
+    echo "TEST MODE: Downloading packages instead of installing them"
+    echo "TEST MODE: Using $ARCHITECTURE as the database Architecture"
+    echo "Please note that this mode is for testing purposes only and does not affect the actual installation."
+
+    echo "Current Flags:"
+    echo "Update Flag: $update_flag"
+    echo "Query Flag: $query_flag"
+    echo "Install Flag: $install_flag"
+    echo "Remove Flag: $remove_flag"
+    echo "Completion Flag: $completion_flag"
+    echo "Help Flag: $help_flag"
+
+fi
+
+# Check for mutually exclusive flags
+if [ "$((query_flag + install_flag + remove_flag + completion_flag))" -gt 1 ]; then
+    echo "Error: Only one of -S, -Q, or -R can be specified at a time."
+    exit 1
+fi
+
+# Check if any action flag was set; if not, show help
+if ! $update_flag && ! $query_flag && ! $install_flag && ! $remove_flag && ! $completion_flag; then
+    echo "No options specified. Showing help:"
+    show_help
+    exit 0
+fi
+
+
+if [[ $help_flag == 'true' ]]; then
+    show_help
+    exit 0
+fi
+
+if [[ $completion_flag == "true" ]]; then
+    completion "${package_names[0]}"
+    exit 0
+fi
+
+
+# Perform updates if specified
+if [[ $update_flag == "true" ]]; then
+    update_database
+fi
+
+# Handle querying
+if [[ $query_flag == "true" ]]; then
+    if [ ${#package_names[@]} -eq 0 ]; then
+        echo "Usage: $0 -q <package_name1> [<package_name2> ...]"
+        exit 1
+    fi
+    
+    echo "Matching packages:"
+    for package_name in "${package_names[@]}"; do
+        results=$(query_database "$package_name")
+        if [ -n "$results" ]; then
+            echo "$results"
+        else
+            echo "No packages found matching '$package_name'."
+        fi
+    done
+elif [[ $install_flag == "true" ]]; then
+    if [ ${#package_names[@]} -eq 0 ]; then
+        echo "Usage: $0 -S <package_name1> [<package_name2> ...]"
+        exit 1
+    fi
+    install_package "${package_names[@]}"
+elif [[ $remove_flag == "true" ]]; then
+    if [ ${#package_names[@]} -eq 0 ]; then
+        echo "Usage: $0 -R <package_name1> [<package_name2> ...]"
+        exit 1
+    fi
+    remove_package "${package_names[@]}"
+fi

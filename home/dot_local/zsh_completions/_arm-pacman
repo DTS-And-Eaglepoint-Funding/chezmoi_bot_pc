@@ -1,0 +1,20 @@
+#compdef arm-pacman
+
+_arm-pacman() {
+    local state
+
+    _arguments -C \
+        '(-u --update)'{-u,--update}'[Update packages]' \
+        '(-q --query)'{-q,--query}'[Query a package]:package_name:_files' \
+        '(-i --install)'{-i,--install}'[Install a package]:package_name:_files' \
+        '(-t --test)'{-t,--test}'[Test mode]' \
+        '*::packages:->packages'
+
+    case $state in
+        packages)
+            _files
+            ;;
+    esac
+}
+
+_arm-pacman "$@"

@@ -1,0 +1,29 @@
+section: screens
+	{{ .chezmoi.hostname }}:
+		halfDuplexCapsLock = false
+		halfDuplexNumLock = false
+		halfDuplexScrollLock = false
+		xtestIsXineramaUnaware = false
+		preserveFocus = false
+		switchCorners = none 
+		switchCornerSize = 0
+end
+
+section: aliases
+end
+
+section: links
+	{{ .chezmoi.hostname }}:
+end
+
+section: options
+	heartbeat = 1000
+	relativeMouseMoves = true
+	screenSaverSync = true
+	win32KeepForeground = false
+	clipboardSharing = true
+	clipboardSharingSize = 100000000
+	switchCorners = none +top-left +top-right +bottom-left +bottom-right 
+	switchCornerSize = 5
+end
+

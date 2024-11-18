@@ -1,0 +1,23 @@
+[Unit]
+{{ if lookPath "input-leap" }}
+Description=Forward the port for InputLeap from %i
+{{ else if lookPath "barrier" }}
+Description=Forward the port for Barrier from %i
+{{ end }}
+
+
+[Service]
+Type=simple
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=3
+TimeoutStartSec=30
+TimeoutStopSec=10
+ExecStart=/usr/bin/ssh -F %h/.ssh/config -o ExitOnForwardFailure=yes -NL 24800:localhost:24800 %i
+
+[Install]
+WantedBy=default.target
