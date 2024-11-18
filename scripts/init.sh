@@ -98,7 +98,7 @@ arm_swich_to_testing(){
 
 install_dev_tools() {
     log "Installing development tools..."
-    if ! sudo_cmd pacman -Sy yay base-devel patch tk barrier cmake; then
+    if ! sudo_cmd pacman -Sy yay base-devel patch tk cmake; then
         log "Failed to install development tools"
         exit 1
     fi
