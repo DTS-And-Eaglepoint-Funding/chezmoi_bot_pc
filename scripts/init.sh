@@ -58,7 +58,7 @@ environment_setup(){
 }
 # Function to check for required tools
 check_required_tools() {
-    local required_tools=("sudo_cmd" "git" "openssl" "curl" "ssh-keygen" "gpg" "systemctl")
+    local required_tools=("git" "openssl" "curl" "ssh-keygen" "gpg" "systemctl")
 
     for tool in "${required_tools[@]}"; do
         if ! command -v "$tool" &> /dev/null; then
