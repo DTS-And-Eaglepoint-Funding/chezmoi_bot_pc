@@ -254,7 +254,7 @@ install_updates() {
 
 install_nerdfonts() {
     log "Installing NerdFonts..."
-    sudo_cmd getnf -gi Hack
+    sudo_cmd "$HOME/.local/share/chezmoi/home/dot_local/bin/executable_getnf" -gi Hack
 }
 
 setup_mise() {
