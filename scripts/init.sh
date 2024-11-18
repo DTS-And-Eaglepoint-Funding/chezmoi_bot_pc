@@ -98,7 +98,7 @@ arm_swich_to_testing(){
 
 install_dev_tools() {
     log "Installing development tools..."
-    if ! sudo_cmd pacman -Sy --needed --noconfirm yay base-devel patch tk cmake; then
+    if ! sudo_cmd pacman -Sy --needed --noconfirm yay base-devel patch tk cmake zsh; then
         log "Failed to install development tools"
         exit 1
     fi
@@ -307,7 +307,7 @@ x86_64(){
 aarch64(){
     echo "aarch64 Addons"
     echo "Setting up carapace..."
-    ghrd --regex -a 'carapace-bin_linux_arm64.tar.gz' carapace-sh/carapace-bin
+    "$HOME/.local/share/chezmoi/home/dot_local/bin/executable_ghrd" --regex -a 'carapace-bin_linux_arm64.tar.gz' carapace-sh/carapace-bin
     mkdir -p carapace
     tar -xzvf carapace-bin_linux_arm64.tar.gz -C carapace
     sudo_cmd chmod +x carapace/carapace
@@ -341,7 +341,7 @@ main() {
     install_updates
     install_nerdfonts
     setup_mise
-    install_mise_plugins
+    # install_mise_plugins
     install_mise_programs
     ui_settup
     case $ARCH in
