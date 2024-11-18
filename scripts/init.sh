@@ -166,7 +166,7 @@ setup_tailscale() {
     sudo_cmd tailscale set --ssh
     sudo_cmd tailscale set --accept-routes
     sudo_cmd tailscale set --advertise-exit-node
-    sudo_cmd tailscale set --exit-node-allow-lan-access
+    # sudo_cmd tailscale set --exit-node-allow-lan-access
 }
 
 setup_ssl() {
