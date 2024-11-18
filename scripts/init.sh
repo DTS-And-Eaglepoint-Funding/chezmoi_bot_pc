@@ -42,7 +42,7 @@ environment_setup(){
             script_name=$(basename "$script")
             
             # Create a function with the same name as the script (remove 'executable_' prefix)
-            function_name="${script_name#executable_}"  # Remove 'executable_' prefix
+            function_name="${script_name#executable_}" # Remove 'executable_' prefix
             if ! command -v "$function_name" &> /dev/null; then
                 if [[ -x "$script" ]]; then
                     # Define the function for executable scripts
@@ -98,7 +98,7 @@ arm_swich_to_testing(){
 
 install_dev_tools() {
     log "Installing development tools..."
-    if ! sudo_cmd pacman -Sy --needed --noconfirm  yay base-devel patch tk cmake; then
+    if ! sudo_cmd pacman -Sy --needed --noconfirm yay base-devel patch tk cmake; then
         log "Failed to install development tools"
         exit 1
     fi
@@ -121,9 +121,9 @@ install_additional_packages() {
 
     if [[ "$ARCH" == "aarch64" ]]; then
         sudo_cmd "$HOME/.local/share/chezmoi/home/dot_local/bin/executable_arm-pacman" install tailscale
-        sudo_cmd "$HOME/.local/share/chezmoi/home/dot_local/bin/executable_arm-pacman"  install atuin
+        sudo_cmd "$HOME/.local/share/chezmoi/home/dot_local/bin/executable_arm-pacman" install atuin
         if ! command -v "xclip" &> /dev/null; then
-            sudo_cmd "$HOME/.local/share/chezmoi/home/dot_local/bin/executable_arm-pacman"  install xclip
+            sudo_cmd "$HOME/.local/share/chezmoi/home/dot_local/bin/executable_arm-pacman" install xclip
         fi
     fi
 }
