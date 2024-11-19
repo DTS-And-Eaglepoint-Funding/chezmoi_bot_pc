@@ -1,0 +1,15 @@
+[Desktop Entry]
+Categories=Utility;RemoteAccess;
+Comment=Keyboard and mouse sharing solution
+{{ if lookPath "input-leapc" }}
+Name=Input Leap Client
+Exec=input-leapc --enable-crypto --no-restart --no-daemon 100.120.40.50
+Icon=io.github.input_leap.InputLeap
+{{ else if lookPath "barrierc" }}
+Name=Barrier Client
+Exec=barrierc --enable-crypto --no-restart --no-daemon 100.120.40.50
+Icon=barrier
+{{ end }}
+Keywords=keyboard;mouse;sharing;network;share;
+Terminal=false
+Type=Application

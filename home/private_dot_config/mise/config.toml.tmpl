@@ -4,7 +4,9 @@ experimental = true
 [tools]
 "ubi:houseabsolute/ubi" = "latest"
 usage = "latest"
+{{ if .chezmoi.arch == "amd64" }}
 neovim = "latest"
+{{ end }}
 python = "3.10.14"
 fzf = "latest"
 chezmoi = "latest"

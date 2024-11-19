@@ -74,7 +74,7 @@ log() {
 configure_pacman() {
     log "Configuring pacman..."
     sudo_cmd sed -Ei '/Color/s/^#//' "/etc/pacman.conf"
-    sudo_cmd sed -i '/^Color$/a ILoveCandy' "/etc/pacman.conf"
+    grep -q '^ILoveCandy$' "/etc/pacman.conf" || sudo_cmd sed -i '/^Color$/a ILoveCandy' "/etc/pacman.conf"
 }
 
 update_package_lists() {
@@ -89,10 +89,12 @@ configure_pamac() {
 
 arm_swich_to_testing(){
     if [[ "$ARCH" == "aarch64" ]]; then 
-        log "Setting pacman to use testing repo by default I wish I could use the standard repository but there are several packages missing in the ARM repository"
-        sudo_cmd pacman-mirrors --api --set-branch testing
-        sudo_cmd pacman-mirrors --fasttrack 5 
-        sudo_cmd pacman -Syu
+        if [[ $(pacman-mirrors -G) != "arm-testing" ]]; then
+            log "Setting pacman to use testing repo by default I wish I could use the standard repository but there are several packages missing in the ARM repository"
+            sudo_cmd pacman-mirrors --api --set-branch testing
+            sudo_cmd pacman-mirrors --fasttrack 5 
+            sudo_cmd pacman -Syu
+        fi
     fi
 }
 
@@ -107,8 +109,8 @@ install_dev_tools() {
 install_additional_packages() {
     log "Installing additional packages..."
     x86_64_packages="git-credential-manager git-credential-manager-extras google-chrome chromedriver anydesk-bin carapace-bin tailscale python-pipx atuin xmousepasteblock rustdesk-bin"
-    aarch64_packages="git-credential-github xclip"
-    common_packages="teamviewer fwupd geckodriver yaycache-hook paccache-hook jq xsel sxhkd openssh input-leap fzf"
+    aarch64_packages="git-credential-github xclip neovim"
+    common_packages="teamviewer fwupd geckodriver yaycache-hook paccache-hook jq xsel sxhkd openssh input-leap fzf linux-rpi5"
     case "$ARCH" in
         "x86_64")
             yay -S --needed --noconfirm $x86_64_packages
@@ -315,10 +317,31 @@ aarch64(){
 }
 
 ui_settup(){
+    swich_to_x11
     plasma-apply-colorscheme BreezeDark
 
 }
+swich_to_x11(){
+    user=$(whoami)
+    text="[Autologin]
+Relogin=true
+Session=plasmax11
+User=${user}
 
+[General]
+HaltCommand=/usr/bin/systemctl poweroff
+RebootCommand=/usr/bin/systemctl reboot
+
+[Theme]
+Current=breath
+CursorTheme=breeze_cursors
+
+[Users]
+MaximumUid=60000
+MinimumUid=1000
+"
+    sudo_cmd echo "$text" > "/etc/sddm.conf.d/kde_settings.conf"
+}
 main() {
     log "Running initialization script for $ARCH architecture..."
     cd "$HOME" || exit 1 
