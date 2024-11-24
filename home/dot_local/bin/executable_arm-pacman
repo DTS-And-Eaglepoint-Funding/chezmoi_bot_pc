@@ -144,8 +144,10 @@ parse "$@"
 # Default architecture for test purposes
 ARCHITECTURE="armv7h"
 
+
 # Output file
-OUTPUT_FILE="archlinuxarm_db.csv"
+mkdir -p "$HOME/.local/share/arm-pacman"
+OUTPUT_FILE="$HOME/.local/share/arm-pacman/archlinuxarm_db.csv"
 
 MIRROR_URL="http://mirror.archlinuxarm.org/"
 
